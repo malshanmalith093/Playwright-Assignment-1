@@ -321,8 +321,8 @@ def _find_chat_locators(page, timeout_ms: int):
     while time.time() < deadline:
         _dismiss_overlays(page)
         try:
-            input_by_ph = page.locator('textarea[placeholder*="English"]').first
-            output_by_ph = page.locator('textarea[placeholder*="Sinhala"]').first
+            input_by_ph = page.locator('[placeholder*="English"]').first
+            output_by_ph = page.locator('[placeholder*="Sinhala"]').first
             if input_by_ph.count() > 0 and output_by_ph.count() > 0 and input_by_ph.is_visible() and output_by_ph.is_visible():
                 action = page.get_by_role("button", name=re.compile(r"^Transliterate$", re.IGNORECASE)).first
                 return input_by_ph, output_by_ph, action
@@ -330,10 +330,10 @@ def _find_chat_locators(page, timeout_ms: int):
             pass
 
         try:
-            count = page.locator("textarea").count()
+            count = page.locator("textarea, input, [contenteditable]").count()
             visible = []
             for i in range(count):
-                loc = page.locator("textarea").nth(i)
+                loc = page.locator("textarea, input, [contenteditable]").nth(i)
                 if loc.is_visible():
                     visible.append(loc)
             if len(visible) >= 2:
@@ -346,11 +346,13 @@ def _find_chat_locators(page, timeout_ms: int):
 
     try:
         meta = page.evaluate(
-            """() => Array.from(document.querySelectorAll('textarea')).map(t => ({
+            """() => Array.from(document.querySelectorAll('textarea, input, [contenteditable]')).map(t => ({
               placeholder: t.getAttribute('placeholder') || '',
               disabled: !!t.disabled,
               readOnly: !!t.readOnly,
-              visible: !!(t.offsetParent)
+              visible: !!(t.offsetParent),
+              tag: t.tagName,
+              type: t.type || ''
             }))"""
         )
         print("Debug: textarea meta:", meta)
